@@ -1,24 +1,29 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import 'package:flutter_svg/svg.dart';
+import 'package:instagram/resources/auth_methods.dart';
 import 'package:instagram/utils/colors.dart';
 import 'package:instagram/widget/text_field_input.dart';
 
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({Key? key}) : super(key: key);
+class SignupScreen extends StatefulWidget {
+  const SignupScreen({Key? key}) : super(key: key);
 
   @override
-  _LoginScreenState createState() => _LoginScreenState();
+  _SignupScreenState createState() => _SignupScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _SignupScreenState extends State<SignupScreen> {
   final TextEditingController _emailcontroller = TextEditingController();
   final TextEditingController _passwordcontroller = TextEditingController();
+  final TextEditingController _biocontroller = TextEditingController();
+  final TextEditingController _usernamecontroller = TextEditingController();
 
   @override
   void dispose() {
     super.dispose();
     _emailcontroller.dispose();
     _passwordcontroller.dispose();
+    _biocontroller.dispose();
+    _usernamecontroller.dispose();
   }
 
   @override
@@ -42,6 +47,35 @@ class _LoginScreenState extends State<LoginScreen> {
                 height: 64,
               ),
               const SizedBox(height: 64),
+              // circular widget to accept and show related file
+              Stack(
+                children: [
+                  const CircleAvatar(
+                    radius: 64,
+                    backgroundImage: NetworkImage(
+                        'https://images.unsplash.com/photo-1648737154547-b0dfd281c51e?ixlib=rb-1.2.1&ixid=MnwxMjA3fDF8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2070&q=80'),
+                  ),
+                  Positioned(
+                    bottom: -10,
+                    left: 80,
+                    child: IconButton(
+                      onPressed: () {},
+                      icon: const Icon(
+                        Icons.add_a_photo,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              // text field input for username
+              TextFieldInput(
+                hintText: 'Entrer votre nom',
+                textInputType: TextInputType.text,
+                textEditingController: _usernamecontroller,
+              ),
+              const SizedBox(
+                height: 24,
+              ),
               // text field input for email
               TextFieldInput(
                 hintText: 'Email',
@@ -61,8 +95,25 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(
                 height: 24,
               ),
+              TextFieldInput(
+                hintText: 'Metier',
+                textInputType: TextInputType.text,
+                textEditingController: _biocontroller,
+              ),
+              const SizedBox(
+                height: 24,
+              ),
               // button login
               InkWell(
+                onTap: () async {
+                  String res = await AuthMethods().signUpUser(
+                    email: _emailcontroller.text,
+                    password: _passwordcontroller.text,
+                    username: _usernamecontroller.text,
+                    bio: _biocontroller.text,
+                  );
+                  print(res);
+                },
                 child: Container(
                   child: const Text('Connexion'),
                   width: double.infinity,
