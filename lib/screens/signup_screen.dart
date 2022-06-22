@@ -1,8 +1,17 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:instagram/resources/auth_methods.dart';
+import 'package:instagram/screens/login_screen.dart';
 import 'package:instagram/utils/colors.dart';
+import 'package:instagram/utils/utils.dart';
 import 'package:instagram/widget/text_field_input.dart';
+
+import '../responsive/mobile_screen_layout.dart';
+import '../responsive/responsive_layout_screen.dart';
+import '../responsive/web_screen_layout.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({Key? key}) : super(key: key);
@@ -16,6 +25,8 @@ class _SignupScreenState extends State<SignupScreen> {
   final TextEditingController _passwordcontroller = TextEditingController();
   final TextEditingController _biocontroller = TextEditingController();
   final TextEditingController _usernamecontroller = TextEditingController();
+  Uint8List? _image;
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -24,6 +35,50 @@ class _SignupScreenState extends State<SignupScreen> {
     _passwordcontroller.dispose();
     _biocontroller.dispose();
     _usernamecontroller.dispose();
+  }
+
+  void selectImage() async {
+    Uint8List im = await pickImage(ImageSource.gallery);
+    setState(() {
+      _image = im;
+    });
+  }
+
+  void signUpUser() async {
+    setState(() {
+      _isLoading = true;
+    });
+    String res = await AuthMethods().signUpUser(
+      email: _emailcontroller.text,
+      password: _passwordcontroller.text,
+      username: _usernamecontroller.text,
+      bio: _biocontroller.text,
+      file: _image!,
+    );
+    setState(() {
+      _isLoading = false;
+    });
+
+    if (res != 'success') {
+      showSnackbar(res, context);
+    } else {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (context) => const ResponsiveLayout(
+            mobileScreenLayout: MobileSceenLayout(),
+            webScreenLayout: WebSceenLayout(),
+          ),
+        ),
+      );
+    }
+  }
+
+  void navigateToLogin() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const LoginScreen(),
+      ),
+    );
   }
 
   @override
@@ -50,16 +105,21 @@ class _SignupScreenState extends State<SignupScreen> {
               // circular widget to accept and show related file
               Stack(
                 children: [
-                  const CircleAvatar(
-                    radius: 64,
-                    backgroundImage: NetworkImage(
-                        'https://images.unsplash.com/photo-1648737154547-b0dfd281c51e?ixlib=rb-1.2.1&ixid=MnwxMjA3fDF8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2070&q=80'),
-                  ),
+                  _image != null
+                      ? CircleAvatar(
+                          radius: 64,
+                          backgroundImage: MemoryImage(_image!),
+                        )
+                      : const CircleAvatar(
+                          radius: 64,
+                          backgroundImage: NetworkImage(
+                              'https://i.stack.imgur.com/l60Hf.png'),
+                        ),
                   Positioned(
                     bottom: -10,
-                    left: 80,
+                    left: 90,
                     child: IconButton(
-                      onPressed: () {},
+                      onPressed: selectImage,
                       icon: const Icon(
                         Icons.add_a_photo,
                       ),
@@ -105,17 +165,15 @@ class _SignupScreenState extends State<SignupScreen> {
               ),
               // button login
               InkWell(
-                onTap: () async {
-                  String res = await AuthMethods().signUpUser(
-                    email: _emailcontroller.text,
-                    password: _passwordcontroller.text,
-                    username: _usernamecontroller.text,
-                    bio: _biocontroller.text,
-                  );
-                  print(res);
-                },
+                onTap: signUpUser,
                 child: Container(
-                  child: const Text('Connexion'),
+                  child: _isLoading
+                      ? const Center(
+                          child: CircularProgressIndicator(
+                            color: primaryColor,
+                          ),
+                        )
+                      : const Text('Inscription'),
                   width: double.infinity,
                   alignment: Alignment.center,
                   padding: const EdgeInsets.symmetric(vertical: 12),
@@ -148,10 +206,10 @@ class _SignupScreenState extends State<SignupScreen> {
                     ),
                   ),
                   GestureDetector(
-                    onTap: () {},
+                    onTap: navigateToLogin,
                     child: Container(
                       child: const Text(
-                        "Créer un compte.",
+                        "Se connecter.",
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                         ),
